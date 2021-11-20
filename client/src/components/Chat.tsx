@@ -9,7 +9,7 @@ type serverMessage = {id: string; sender: string; message: string; date: Date;};
 const Chat = () => {
   const [messages, setMessages] = useState<message[]>([])
   const [input, setInput] = useState("")
-  const [me, setMe] = useState<string | null>(null)
+  const [me, setMe] = useState<string>("")
   const socket = useRef<Socket>();
 
   const handleSubmitNewMessage = () => {
@@ -18,9 +18,14 @@ const Chat = () => {
   }
 
   useEffect(() => {
-    if (me === null) {
-      setMe(window.prompt("Type user name"))
+    let me: string | null = ""
+    while (me === "" || me === null) {
+      me = window.prompt("Type user name")
+      console.log("me:", me)
     }
+
+    console.log("error")
+    setMe(me)
 
     socket.current = io("http://localhost:4000/message")
 
@@ -33,6 +38,8 @@ const Chat = () => {
 
     socket.current.on('all-messages-to-client', (data: serverMessage[]) => {
       const msgs = data.map((item): message => {
+        console.log("me: ", me)
+        console.log("item.sender: ", item.sender)
         return {id: item.id, isOwner: me === item.sender, user: item.sender, body: item.message}
       })
       setMessages(msgs);
@@ -45,8 +52,7 @@ const Chat = () => {
   }, [])
 
   return (
-    <div>
-      Chat
+    <div className="mesgs">
       <MessageList messages={messages}/>
       <MessageForm value={input} handleSubmit={handleSubmitNewMessage} onChange={e => setInput(e.target.value)}/>
     </div>
